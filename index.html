@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SCADA-WorkTracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* ============================================================
+   SCADA-WorkTracker — portal page
+   Edit COMPANY / LOGO_URL / DEFAULT_MODULES in the <script> below.
+   ============================================================ */
+:root{
+  --bg:#EEF1F5;
+  --surface:#F3F5F8;
+  --ink:#1E2733;
+  --muted:#5B6574;
+  --faint:#8A94A3;
+  --light:#FFFFFF;
+  --dark:rgba(163,177,198,.55);
+  --teal:#0F8B8D;
+  --shadow-out:8px 8px 18px var(--dark),-8px -8px 18px var(--light);
+  --shadow-sm:4px 4px 10px var(--dark),-4px -4px 10px var(--light);
+  --shadow-in:inset 3px 3px 7px var(--dark),inset -3px -3px 7px var(--light);
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.5;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+a{color:inherit}
+
+/* Header */
+.topbar{position:sticky;top:0;z-index:20;background:var(--surface);box-shadow:0 4px 14px var(--dark);padding-top:env(safe-area-inset-top,0px)}
+.topbar .in{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;min-width:0}
+.brand .logo{width:34px;height:34px;flex:none}
+.brand .logo img{width:100%;height:100%;object-fit:contain}
+.brand .logo.wide{width:auto;height:36px}
+.brand .logo.wide img{width:auto;mix-blend-mode:multiply}
+.brand .co{font-weight:800;font-size:17px;letter-spacing:.01em;color:#16307A;white-space:nowrap}
+.brand .co span{color:var(--teal)}
+.brand .app{font-weight:600;font-size:14px;color:var(--muted);margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:560px){.brand .app{display:none}}
+
+.nbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border:0;border-radius:12px;background:var(--surface);box-shadow:var(--shadow-sm);font-weight:600;color:var(--teal);transition:box-shadow .15s,transform .15s}
+.nbtn:hover{transform:translateY(-1px)}
+.nbtn:active{box-shadow:var(--shadow-in);transform:none}
+.nbtn svg{width:16px;height:16px}
+.nbtn.on{box-shadow:var(--shadow-in)}
+.acct{display:flex;align-items:center;gap:12px}
+.who{display:flex;flex-direction:column;align-items:flex-end;line-height:1.2;font-size:13px;font-weight:700}
+.who small{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.who small.user{color:#9B7BE8}
+@media (max-width:480px){.who{display:none!important}}
+.hint{font-size:12.5px;color:var(--faint);margin:0}
+.nbtn.editmode{letter-spacing:.06em;font-size:13px}
+.nbtn.editmode[aria-pressed="true"]{background:var(--teal);color:#fff;box-shadow:var(--shadow-in)}
+@media (max-width:640px){.nbtn.editmode span{display:none}}
+.admin [data-key]{outline:2px dashed #7CC7C8;outline-offset:6px;border-radius:6px;cursor:text;caret-color:var(--ink)}
+.admin [data-key]:focus{outline-color:var(--teal);outline-style:solid}
+.admin h1[data-key]{-webkit-text-fill-color:initial;color:var(--ink);background:none}
+.editbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#12343B;color:#E6F4F3;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -6px 20px rgba(0,0,0,.18)}
+.editbar .in{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;gap:12px 20px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.editbar .msg{font-size:13.5px;max-width:62ch}
+.editbar .msg b{display:inline-block;margin-right:8px;padding:2px 8px;border-radius:6px;background:#2CC4A8;color:#0B2328;font-size:11px;letter-spacing:.1em}
+.editbar .btns{display:flex;gap:8px;flex-wrap:wrap}
+.editbar .nbtn{box-shadow:none;background:#1E4A52;color:#E6F4F3}
+.editbar .nbtn.primary{background:#2CC4A8;color:#0B2328}
+.editbar .nbtn.danger{background:#C2415D;color:#fff}
+body.admin{padding-bottom:120px}
+.badge .org [data-key]{display:block}
+.admin .badge .org [data-key]{outline-offset:2px;margin:4px 0;padding:0 4px}
+body.admin .toast{bottom:calc(env(safe-area-inset-bottom,0px) + 120px)}
+
+/* Hero */
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:44px 64px}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px}
+.badge{display:flex;align-items:center;gap:18px;padding:16px 26px;border-radius:18px;background:var(--surface);box-shadow:var(--shadow-out);border-top:3px solid var(--teal);text-align:left;flex-wrap:wrap;justify-content:center}
+.badge .logo{width:52px;height:52px}
+.badge .logo img{width:100%;height:100%;object-fit:contain}
+.badge .logo.wide{width:auto;height:54px;padding-right:18px;border-right:1px solid #D5DAE1}
+.badge .logo.wide img{width:auto;mix-blend-mode:multiply}
+@media (max-width:480px){.badge .logo.wide{border-right:0;padding-right:0}}
+.badge .co{font-weight:800;font-size:26px;color:#16307A;letter-spacing:.01em}
+.badge .co span{color:var(--teal)}
+.badge .org{font-size:12px;color:var(--faint);line-height:1.35}
+.badge .org b{display:block;color:var(--ink);font-size:13px;font-weight:700}
+h1{margin:10px 0 0;font-size:clamp(34px,6vw,52px);font-weight:800;letter-spacing:-.02em;line-height:1.1;text-wrap:balance;
+   background:linear-gradient(90deg,#0F8B8D 0%,#22B573 45%,#8FC26B 62%,#E07AA8 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{margin:0;max-width:62ch;color:var(--muted);font-size:17px}
+.hero .nbtn{margin-top:14px;padding:13px 26px}
+
+/* Section label */
+.label{display:inline-flex;align-items:center;gap:8px;margin:64px 0 18px;padding:6px 14px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow-sm);font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.label i{width:6px;height:6px;border-radius:50%;background:#22C55E;display:inline-block}
+.row-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:64px 0 18px}
+.row-head .label{margin:0}
+.adminbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.adminbar .note{font-size:13px;color:var(--muted);align-self:center}
+
+/* Cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:24px}
+.card{--c:var(--teal);position:relative;display:flex;flex-direction:column;gap:12px;padding:22px 22px 20px;border-radius:18px;background:var(--surface);box-shadow:var(--shadow-out);border-top:3px solid var(--c);min-height:280px;transition:transform .18s}
+.card:hover{transform:translateY(-3px)}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start}
+.ico{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--tint);box-shadow:var(--shadow-sm);color:var(--c)}
+.ico svg{width:20px;height:20px}
+.pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;color:var(--c);background:var(--tint);border:1px solid color-mix(in srgb,var(--c) 35%,transparent);display:inline-flex;align-items:center;gap:5px}
+.pill.live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.pill.off{color:var(--faint);background:#E6E9EE;border-color:#D5DAE1}
+.card h3{margin:6px 0 0;font-size:17px;font-weight:700}
+.card p{margin:0;color:var(--muted);font-size:14px;flex:1}
+.open{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow-sm);color:var(--c);font-weight:600;font-size:14px;text-decoration:none;border:0;transition:box-shadow .15s}
+.open:hover{box-shadow:var(--shadow-in)}
+.open svg{width:15px;height:15px}
+.open[aria-disabled="true"]{color:var(--faint);pointer-events:none}
+.edit{position:absolute;top:12px;right:12px;display:none;gap:6px}
+.admin .edit{display:flex}
+.admin .card .pill{visibility:hidden}
+.edit button{border:0;width:32px;height:32px;border-radius:10px;background:var(--surface);box-shadow:var(--shadow-sm);display:grid;place-items:center;color:var(--muted)}
+.edit button:hover{color:var(--ink)}
+.edit svg{width:15px;height:15px}
+.addcard{display:flex;min-height:280px;border-radius:18px;border:2px dashed #C3CBD6;background:transparent;color:var(--teal);font-weight:700;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.addcard:hover{background:var(--surface)}
+.addcard .ico{--c:var(--teal);--tint:#DDF1F1}
+
+footer{margin-top:56px;text-align:center;font-size:12.5px;color:var(--faint)}
+
+/* Modal */
+.scrim{position:fixed;inset:0;background:rgba(30,39,51,.35);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border-radius:20px;box-shadow:0 30px 80px rgba(30,39,51,.3);border-top:3px solid var(--teal)}
+.modal header{padding:20px 24px 4px;font-weight:800;font-size:18px}
+.modal form{padding:14px 24px 22px;display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field>label,.field>span{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.field input,.field textarea,.field select{padding:10px 12px;border:0;border-radius:12px;background:var(--surface);box-shadow:var(--shadow-in);width:100%}
+.field textarea{min-height:76px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:480px){.two{grid-template-columns:1fr}}
+.swatches,.icons{display:flex;flex-wrap:wrap;gap:8px}
+.swatches button{width:30px;height:30px;border-radius:50%;border:3px solid var(--surface);box-shadow:var(--shadow-sm);background:var(--sw)}
+.swatches button[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
+.icons button{width:40px;height:40px;border-radius:10px;border:0;background:var(--surface);box-shadow:var(--shadow-sm);display:grid;place-items:center;color:var(--muted)}
+.icons button[aria-pressed="true"]{box-shadow:var(--shadow-in);color:var(--teal)}
+.icons svg{width:18px;height:18px}
+.mfoot{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:4px}
+.mfoot .r{display:flex;gap:10px;margin-left:auto}
+.nbtn.primary{background:var(--teal);color:#fff;box-shadow:4px 4px 10px var(--dark)}
+.nbtn.danger{color:#C2415D}
+.nbtn.danger.armed{background:#C2415D;color:#fff}
+.err{color:#C2415D;font-size:13px;min-height:1em}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;z-index:60;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="in">
+    <a class="brand" href="#top" aria-label="Home">
+      <span class="logo" data-logo></span>
+      <span class="co" data-co></span>
+      <span class="app" data-app></span>
+    </a>
+    <div class="acct">
+      <span class="who" id="who" hidden></span>
+      <button class="nbtn editmode" id="editBtn" type="button" hidden aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg><span>EDIT MODE</span></button>
+      <button class="nbtn" id="loginTop" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Login</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <section class="hero">
+    <div class="badge">
+      <span class="logo" data-logo></span>
+      <span class="co" data-co></span>
+      <span class="org"><span data-org data-key="org"></span><b data-section data-key="section"></b></span>
+    </div>
+    <h1 data-app data-key="app"></h1>
+    <p class="lead" data-tagline data-key="tagline"></p>
+    <button class="nbtn" id="loginHero" type="button">Admin Login</button>
+  </section>
+
+  <div class="row-head">
+    <div class="label"><i></i>Modules</div>
+    <button class="nbtn primary addtop" type="button" id="addTop">+ Add module</button>
+  </div>
+  <div class="grid" id="grid"></div>
+
+  <footer><span data-co-plain></span> · <span data-section></span></footer>
+</main>
+
+<div class="editbar" id="adminbar" hidden>
+  <div class="in">
+    <div class="msg"><b>EDIT MODE</b> Click the title, subtitle, company or section text to change it. Use ✎ on a card to edit a module, ‹ to move it.</div>
+    <div class="btns">
+      <button class="nbtn primary" type="button" id="dlBtn">Download updated page</button>
+      <button class="nbtn" type="button" id="resetBtn">Restore defaults</button>
+      <button class="nbtn" type="button" id="exitBtn">Exit edit mode</button>
+    </div>
+  </div>
+</div>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+const PAGE_SOURCE="<!doctype html>\n"+document.documentElement.outerHTML; // original page, used by "Download updated page"
+/* ============================================================
+   CONFIGURATION — edit these for your site
+   ============================================================ */
+const COMPANY = /*@COMPANY*/{
+  name: "NAM THEUN", nameAccent: "2",          // shown as NAME + accent
+  org: "Nam Theun 2 Power Company",
+  section: "I&C / SCADA Section",
+  app: "SCADA-WorkTracker",
+  tagline: "Unified management for OT monitoring, asset inventory, and user access control across all industrial systems."
+}/*@END*/;
+// Changes whenever an updated page is downloaded, so browsers drop older local edits.
+const DATA_VERSION = /*@VER*/"1"/*@END*/;
+// Put your logo file next to index.html and set its name here, e.g. "logo.png".
+// Leave empty to show a neutral placeholder mark.
+const LOGO_URL = "data:image/png;base64,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";  // embedded logo (or set to "logo.png")
+
+// LOGIN ACCOUNTS
+// role "admin": open modules + add / edit / delete / reorder modules
+// role "user" : open modules only
+// Passwords are stored as SHA-256 hashes of  "ot-portal:<username>:<password>".
+// To set a new password: open this page, press F12 → Console, run
+//     await hashPassword("admin", "MyNewPassword")
+// and paste the result into "hash" below.
+// Default passwords (CHANGE THEM):  admin / Admin@NT2    user / User@NT2
+// NOTE: this login runs in the browser only. It keeps casual visitors out but
+// is not a security boundary — for real protection put the site behind your
+// web server's authentication (IIS / Nginx / Apache login, AD/LDAP, etc.).
+const ACCOUNTS = [
+  {username:"admin", name:"Administrator", role:"admin",
+   hash:"64f9efea8216a12e359707f87ea71405ec25f05df048e4f546e14d7d4153a401"},
+  {username:"user",  name:"OT User",       role:"user",
+   hash:"ba95d934c2c93f92353ffc33c07fd427d3b1169b88dee7b64948fe055212ca2a"}
+];
+const REQUIRE_LOGIN_TO_OPEN = true;   // false = anyone can use "Open Module"
+
+// Colours available for module cards.
+const COLORS = {
+  teal:   {c:"#0F8B8D", tint:"#DCEFF0"},
+  purple: {c:"#9B7BE8", tint:"#ECE6FB"},
+  green:  {c:"#3DBE6B", tint:"#DFF5E6"},
+  pink:   {c:"#E0679A", tint:"#FBE3EE"},
+  mint:   {c:"#27C3A6", tint:"#DBF5EF"},
+  blue:   {c:"#3B82D6", tint:"#E0ECFA"},
+  amber:  {c:"#D99A1E", tint:"#FAEFD8"}
+};
+
+// Default modules. "url" is where "Open Module" goes (leave "" for none).
+const DEFAULT_MODULES = /*@MODULES*/[
+  {id:"otm", title:"OT Monitoring", icon:"pulse", color:"teal", status:"active",
+   desc:"Daily monitoring of SCADA systems, issue tracking, and engineer sign-off workflows.", url:""},
+  {id:"asset", title:"Asset Inventory", icon:"database", color:"purple", status:"active",
+   desc:"Full OT/ICS asset lifecycle management, EoL tracking, and inventory reconciliation.", url:""},
+  {id:"uam", title:"User Access Matrix", icon:"shield", color:"green", status:"live",
+   desc:"User access rights management across all OT systems with audit trails and review dates.", url:""},
+  {id:"assess", title:"Security Assessment", icon:"clipboard", color:"pink", status:"active",
+   desc:"OT cybersecurity self-assessment across People, Process, Technology and Supply Chain dimensions.", url:""},
+  {id:"audit", title:"Audit Guideline", icon:"search", color:"mint", status:"active",
+   desc:"ISO 27001:2022 & ISMS audit checklist, OT/ICS controls, and non-conformance finding tracker.", url:""},
+  {id:"pm", title:"Project Management", icon:"kanban", color:"teal", status:"active",
+   desc:"SCADA works follow-up by module: tasks, owners, due dates and blocked items.",
+   url:"https://claude.ai/artifact/BeGagRN6q1aaDQx1EFz6pw"}
+]/*@END*/;
+
+/* ============================================================
+   ICONS (simple line icons)
+   ============================================================ */
+const ICONS = {
+  pulse:'<polyline points="3 12 7 12 10 5 14 19 17 12 21 12"/>',
+  database:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  clipboard:'<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/><polyline points="9 13 11 15 15 11"/>',
+  search:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="14 3 14 9 20 9"/><circle cx="11.5" cy="14.5" r="2.5"/><line x1="13.3" y1="16.3" x2="15" y2="18"/>',
+  kanban:'<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="8" y1="8" x2="8" y2="15"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="16" y1="8" x2="16" y2="17"/>',
+  server:'<rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><line x1="7" y1="7.5" x2="7.01" y2="7.5"/><line x1="7" y1="16.5" x2="7.01" y2="16.5"/>',
+  network:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.8 3 2.6 3.5 5.2"/>',
+  gauge:'<path d="M4 18a8 8 0 1 1 16 0"/><line x1="12" y1="18" x2="16" y2="11"/><circle cx="12" cy="18" r="1"/>',
+  bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21a2 2 0 0 0 4 0"/>',
+  wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>',
+  bolt:'<polygon points="13 2 4 14 12 14 11 22 20 10 12 10"/>',
+  book:'<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4z"/><path d="M20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>'
+};
+const svg=(name)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]||ICONS.pulse}</svg>`;
+const EXT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><line x1="20" y1="4" x2="11" y2="13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+const PEN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
+const UP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>';
+const PLACEHOLDER_LOGO='<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" fill="#16307A"/><path d="M8 27c6-6 10-6 16 0s10 6 16 0" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/><path d="M8 19c6-6 10-6 16 0s10 6 16 0" fill="none" stroke="#2CC4A8" stroke-width="3.5" stroke-linecap="round"/></svg>';
+
+const STATUSES=[{k:"active",label:"Active"},{k:"live",label:"Active (live dot)"},{k:"maint",label:"Maintenance"},{k:"soon",label:"Coming soon"}];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const KEY="otPortal.modules.v1";
+let modules=load();
+let admin=false;          // edit mode (admins only)
+let session=loadSession(); // {username,name,role} or null
+function loadSession(){try{const s=JSON.parse(sessionStorage.getItem("otPortal.session")||"null");if(s&&ACCOUNTS.some(a=>a.username===s.username&&a.role===s.role))return s;}catch(e){}return null;}
+function saveSession(){try{session?sessionStorage.setItem("otPortal.session",JSON.stringify(session)):sessionStorage.removeItem("otPortal.session");}catch(e){}}
+const isAdmin=()=>session&&session.role==="admin";
+
+/* SHA-256 (pure JS, works on http:// intranet pages too) */
+function sha256Hex(str){
+  const b=new TextEncoder().encode(str),K=[],H=[];
+  const frac=x=>((x-Math.floor(x))*4294967296)>>>0;
+  for(let n=2,c=0;c<64;n++){let p=true;for(let d=2;d*d<=n;d++)if(n%d===0){p=false;break;}if(p){if(c<8)H[c]=frac(Math.pow(n,1/2));K[c]=frac(Math.pow(n,1/3));c++;}}
+  const l=b.length,tot=((l+9+63)>>6)<<6,m=new Uint8Array(tot);m.set(b);m[l]=0x80;
+  const dv=new DataView(m.buffer);dv.setUint32(tot-8,Math.floor(l*8/4294967296));dv.setUint32(tot-4,(l*8)>>>0);
+  const w=new Uint32Array(64),r=(x,n)=>(x>>>n)|(x<<(32-n));
+  for(let o=0;o<tot;o+=64){
+    for(let i=0;i<16;i++)w[i]=dv.getUint32(o+i*4);
+    for(let i=16;i<64;i++){const s0=r(w[i-15],7)^r(w[i-15],18)^(w[i-15]>>>3),s1=r(w[i-2],17)^r(w[i-2],19)^(w[i-2]>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}
+    let[a,bb,c,d,e,f,g,h]=H;
+    for(let i=0;i<64;i++){const S1=r(e,6)^r(e,11)^r(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[i]+w[i])>>>0,S0=r(a,2)^r(a,13)^r(a,22),mj=(a&bb)^(a&c)^(bb&c),t2=(S0+mj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=bb;bb=a;a=(t1+t2)>>>0;}
+    H[0]=(H[0]+a)>>>0;H[1]=(H[1]+bb)>>>0;H[2]=(H[2]+c)>>>0;H[3]=(H[3]+d)>>>0;H[4]=(H[4]+e)>>>0;H[5]=(H[5]+f)>>>0;H[6]=(H[6]+g)>>>0;H[7]=(H[7]+h)>>>0;
+  }
+  return H.map(x=>x.toString(16).padStart(8,"0")).join("");
+}
+window.hashPassword=async(username,password)=>sha256Hex(`ot-portal:${String(username).trim().toLowerCase()}:${password}`);
+function load(){try{const s=localStorage.getItem(KEY);if(s){const v=JSON.parse(s);
+  if(Array.isArray(v)&&DATA_VERSION==="1")return v;               // older format
+  if(v&&v.ver===DATA_VERSION&&Array.isArray(v.modules))return v.modules;}}catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_MODULES));}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({ver:DATA_VERSION,modules}));}catch(e){toast("Couldn't save in this browser (storage is blocked).");}}
+const TEXT_KEY="otPortal.texts.v1", TEXT_FIELDS=["app","tagline","org","section"];
+const ORIGINAL_COMPANY=JSON.parse(JSON.stringify(COMPANY));
+try{const t=JSON.parse(localStorage.getItem(TEXT_KEY)||"null");if(t&&t.ver===DATA_VERSION)for(const k of TEXT_FIELDS)if(typeof t[k]==="string"&&t[k])COMPANY[k]=t[k];}catch(e){}
+function saveTexts(){try{const t={ver:DATA_VERSION};for(const k of TEXT_FIELDS)t[k]=COMPANY[k];localStorage.setItem(TEXT_KEY,JSON.stringify(t));}catch(e){toast("Couldn't save in this browser (storage is blocked).");}}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const $=s=>document.querySelector(s);
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function safeUrl(u){u=String(u||"").trim();if(!u)return"";if(/^(https?:)?\/\//i.test(u)||/^[\w\-./#?=&%]+$/.test(u))return u;return"";}
+
+function applyBrand(){
+  // A full logo image already contains the company name, so the text name is hidden.
+  document.querySelectorAll("[data-logo]").forEach(n=>{n.classList.toggle("wide",!!LOGO_URL);n.innerHTML=LOGO_URL?`<img src="${esc(LOGO_URL)}" alt="${esc(COMPANY.org)}">`:PLACEHOLDER_LOGO;});
+  document.querySelectorAll("[data-co]").forEach(n=>{n.hidden=!!LOGO_URL;n.innerHTML=`${esc(COMPANY.name)} <span>${esc(COMPANY.nameAccent)}</span>`;});
+  document.querySelectorAll("[data-co-plain]").forEach(n=>n.textContent=COMPANY.org);
+  document.querySelectorAll("[data-app]").forEach(n=>n.textContent=COMPANY.app);
+  document.querySelectorAll("[data-org]").forEach(n=>n.textContent=COMPANY.org);
+  document.querySelectorAll("[data-section]").forEach(n=>n.textContent=COMPANY.section);
+  document.querySelectorAll("[data-tagline]").forEach(n=>n.textContent=COMPANY.tagline);
+  document.title=COMPANY.app;
+}
+
+function render(){
+  if(!isAdmin())admin=false;
+  document.body.classList.toggle("admin",admin);
+  $("#adminbar").hidden=!admin;
+  const who=$("#who");
+  if(session){who.hidden=false;who.innerHTML=`${esc(session.name)}<small class="${session.role}">${session.role==="admin"?"Admin":"User"}</small>`;}
+  else who.hidden=true;
+  $("#loginTop span").textContent=session?"Logout":"Login";
+  const hero=$("#loginHero");
+  hero.hidden=!!session;hero.textContent="Login";
+  const eb=$("#editBtn");eb.hidden=!isAdmin();eb.setAttribute("aria-pressed",String(admin));
+  eb.querySelector("span").textContent=admin?"EDIT MODE: ON":"EDIT MODE";
+  eb.title=admin?"Turn edit mode off":"Turn edit mode on";
+  document.querySelectorAll("[data-key]").forEach(n=>{if(admin){n.setAttribute("contenteditable","true");n.setAttribute("spellcheck","false");}else n.removeAttribute("contenteditable");});
+  const g=$("#grid");
+  g.innerHTML=modules.map((m,i)=>{
+    const col=COLORS[m.color]||COLORS.teal;
+    const st=STATUSES.find(s=>s.k===m.status)||STATUSES[0];
+    const off=m.status==="maint"||m.status==="soon";
+    const url=safeUrl(m.url);
+    const pillText=m.status==="live"?"Active":st.label;
+    return `<article class="card" style="--c:${col.c};--tint:${col.tint}">
+      <div class="edit">
+        ${i>0?`<button type="button" data-move="${i}" aria-label="Move ${esc(m.title)} earlier" title="Move earlier">${UP}</button>`:""}
+        <button type="button" data-edit="${i}" aria-label="Edit ${esc(m.title)}" title="Edit">${PEN}</button>
+      </div>
+      <div class="top">
+        <div class="ico">${svg(m.icon)}</div>
+        <span class="pill ${m.status==="live"?"live":""} ${off?"off":""}">${esc(pillText)}</span>
+      </div>
+      <h3>${esc(m.title)}</h3>
+      <p>${esc(m.desc)}</p>
+      ${off||!url
+        ?`<span class="open" aria-disabled="true">${EXT}${off?esc(st.label):"No link yet"}</span>`
+        :(REQUIRE_LOGIN_TO_OPEN&&!session)
+          ?`<button class="open" type="button" data-login>${EXT}Log in to open</button>`
+          :`<a class="open" href="${esc(url)}" target="_blank" rel="noopener">${EXT}Open Module</a>`}
+    </article>`;
+  }).join("")+`<button class="addcard" type="button" id="addCard"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>+ Add module</button>`;
+}
+
+/* ============================================================
+   INTERACTIONS
+   ============================================================ */
+$("#grid").addEventListener("click",e=>{
+  if(e.target.closest("[data-login]")){loginForm();return;}
+  const ed=e.target.closest("[data-edit]");if(ed&&isAdmin()){moduleForm(+ed.dataset.edit);return;}
+  if(e.target.closest("#addCard")){requestAdd();return;}
+  if(!isAdmin())return;
+  const mv=e.target.closest("[data-move]");if(mv){const i=+mv.dataset.move;[modules[i-1],modules[i]]=[modules[i],modules[i-1]];save();render();return;}
+  if(e.target.closest("#addCard"))moduleForm(-1);
+});
+function requestAdd(){
+  if(isAdmin()){moduleForm(-1);return;}
+  if(session){toast("Only the admin account can add modules. Log out and log in as admin.");return;}
+  loginForm(()=>{if(isAdmin())moduleForm(-1);else toast("Only the admin account can add modules.");});
+}
+$("#addTop").onclick=requestAdd;
+$("#exitBtn").onclick=()=>{admin=false;render();};
+let resetArmed=false;
+$("#resetBtn").onclick=e=>{
+  if(!resetArmed){resetArmed=true;e.currentTarget.textContent="Click again to restore defaults";e.currentTarget.classList.add("danger");setTimeout(()=>{resetArmed=false;$("#resetBtn").textContent="Restore defaults";$("#resetBtn").classList.remove("danger");},4000);return;}
+  modules=JSON.parse(JSON.stringify(DEFAULT_MODULES));save();
+  Object.assign(COMPANY,ORIGINAL_COMPANY);try{localStorage.removeItem(TEXT_KEY);}catch(e){}applyBrand();
+  resetArmed=false;$("#resetBtn").textContent="Restore defaults";$("#resetBtn").classList.remove("danger");render();toast("Defaults restored");
+};
+$("#loginTop").onclick=()=>{
+  if(session){session=null;admin=false;saveSession();render();toast("Logged out");}
+  else loginForm();
+};
+$("#loginHero").onclick=()=>loginForm();
+$("#editBtn").onclick=()=>{if(!isAdmin())return;admin=!admin;render();toast(admin?"Edit mode on":"Edit mode off. Changes are saved in this browser.");};
+
+/* Inline text editing (edit mode) */
+document.querySelectorAll("[data-key]").forEach(n=>{
+  n.addEventListener("keydown",e=>{if(!admin)return;if(e.key==="Enter"){e.preventDefault();n.blur();}if(e.key==="Escape"){n.textContent=COMPANY[n.dataset.key];n.blur();}});
+  n.addEventListener("paste",e=>{if(!admin)return;e.preventDefault();const t=(e.clipboardData||window.clipboardData).getData("text").replace(/\s+/g," ");document.execCommand("insertText",false,t);});
+  n.addEventListener("blur",()=>{if(!admin)return;const k=n.dataset.key,v=n.textContent.replace(/\s+/g," ").trim();
+    if(!v){n.textContent=COMPANY[k];toast("Text can't be empty.");return;}
+    if(v!==COMPANY[k]){COMPANY[k]=v;saveTexts();applyBrand();toast("Text updated");}});
+});
+
+/* Download the page with the current texts and modules built in */
+function buildUpdatedPage(){
+  const js=o=>JSON.stringify(o,null,2).replace(/</g,"\\u003c");
+  const company={...ORIGINAL_COMPANY};for(const k of TEXT_FIELDS)company[k]=COMPANY[k];
+  const ver=Date.now().toString(36);
+  let src=PAGE_SOURCE
+    .replace(/\/\*@COMPANY\*\/[\s\S]*?\/\*@END\*\//,()=>"/*@COMPANY*/"+js(company)+"/*@END*/")
+    .replace(/\/\*@MODULES\*\/[\s\S]*?\/\*@END\*\//,()=>"/*@MODULES*/"+js(modules)+"/*@END*/")
+    .replace(/\/\*@VER\*\/[\s\S]*?\/\*@END\*\//,()=>"/*@VER*/"+JSON.stringify(ver)+"/*@END*/");
+  return src;
+}
+$("#dlBtn").onclick=()=>{
+  try{
+    const blob=new Blob([buildUpdatedPage()],{type:"text/html"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="index.html";
+    document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    toast("Downloaded index.html. Replace the file on your server so everyone sees the changes.");
+  }catch(e){toast("This browser blocked the download. Open the page directly in Chrome or Edge and try again.");}
+};
+
+function openModal(html,onMount){
+  const root=$("#modalRoot");
+  root.innerHTML=`<div class="scrim"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  const close=()=>{root.innerHTML="";document.removeEventListener("keydown",esc_);};
+  const esc_=e=>{if(e.key==="Escape")close();};
+  document.addEventListener("keydown",esc_);
+  root.querySelector(".scrim").addEventListener("click",e=>{if(e.target===e.currentTarget)close();});
+  root.querySelectorAll("[data-close]").forEach(b=>b.onclick=close);
+  onMount(root,close);
+  const form=root.querySelector("form");
+  if(form&&form.onsubmit){
+    const handler=form.onsubmit;let busy=false;
+    const run=async()=>{if(busy)return;busy=true;try{await handler({preventDefault(){}});}finally{busy=false;}};
+    form.onsubmit=e=>{e.preventDefault();run();};
+    root.querySelectorAll("[data-submit]").forEach(b=>b.addEventListener("click",run));
+    form.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();run();}});
+  }
+}
+
+let failCount=0,lockUntil=0;
+function loginForm(after){
+  openModal(`<header>Log in</header>
+    <form id="lf" autocomplete="on">
+      <div class="field"><label for="lu">Username</label><input id="lu" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+      <div class="field"><label for="lp">Password</label><input id="lp" type="password" autocomplete="current-password"></div>
+      <div class="err" id="lerr" role="alert"></div>
+      <div class="mfoot"><div class="r"><button class="nbtn" type="button" data-close>Cancel</button><button class="nbtn primary" type="button" data-submit>Log in</button></div></div>
+    </form>`,(root,close)=>{
+      const u=root.querySelector("#lu"),p=root.querySelector("#lp"),err=root.querySelector("#lerr");u.focus();
+      root.querySelector("#lf").onsubmit=async e=>{e.preventDefault();
+        const now=Date.now();
+        if(now<lockUntil){err.textContent=`Too many attempts. Try again in ${Math.ceil((lockUntil-now)/1000)} seconds.`;return;}
+        const name=u.value.trim().toLowerCase();
+        const pw=p.value.trim();
+        if(!name||!pw){err.textContent="Enter your username and password.";return;}
+        const h=await hashPassword(name,pw);
+        const acc=ACCOUNTS.find(a=>a.username.toLowerCase()===name&&a.hash===h);
+        if(!acc){
+          failCount++;if(failCount>=5){lockUntil=Date.now()+30000;failCount=0;}
+          err.textContent="Username or password is incorrect.";p.value="";p.focus();return;
+        }
+        failCount=0;session={username:acc.username,name:acc.name,role:acc.role};saveSession();
+        close();render();toast(`Logged in as ${acc.name} (${acc.role==="admin"?"Admin":"User"})`);
+        if(typeof after==="function")after();
+      };
+    });
+}
+
+function moduleForm(idx){
+  const m=idx>=0?modules[idx]:{title:"",desc:"",icon:"pulse",color:"teal",status:"active",url:""};
+  let icon=m.icon,color=m.color;
+  openModal(`<header>${idx>=0?"Edit module":"Add module"}</header>
+    <form id="mf">
+      <div class="field"><label for="m-title">Module name *</label><input id="m-title" maxlength="60" value="${esc(m.title)}"></div>
+      <div class="field"><label for="m-desc">Description</label><textarea id="m-desc" maxlength="240">${esc(m.desc)}</textarea></div>
+      <div class="field"><label for="m-url">Link (URL the “Open Module” button opens)</label><input id="m-url" placeholder="https://… or page.html" value="${esc(m.url)}"></div>
+      <div class="two">
+        <div class="field"><label for="m-status">Status</label><select id="m-status">${STATUSES.map(s=>`<option value="${s.k}" ${s.k===m.status?"selected":""}>${s.label}</option>`).join("")}</select></div>
+        <div class="field"><span>Colour</span><div class="swatches" id="sw">${Object.entries(COLORS).map(([k,v])=>`<button type="button" data-c="${k}" style="--sw:${v.c}" aria-label="${k}" aria-pressed="${k===color}"></button>`).join("")}</div></div>
+      </div>
+      <div class="field"><span>Icon</span><div class="icons" id="ic">${Object.keys(ICONS).map(k=>`<button type="button" data-i="${k}" aria-label="${k}" aria-pressed="${k===icon}">${svg(k)}</button>`).join("")}</div></div>
+      <div class="err" id="merr" role="alert"></div>
+      <div class="mfoot">
+        ${idx>=0?`<button class="nbtn danger" type="button" id="del">Delete module</button>`:""}
+        <div class="r"><button class="nbtn" type="button" data-close>Cancel</button><button class="nbtn primary" type="button" data-submit>Save</button></div>
+      </div>
+    </form>`,(root,close)=>{
+      root.querySelector("#m-title").focus();
+      root.querySelector("#sw").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;color=b.dataset.c;root.querySelectorAll("#sw button").forEach(x=>x.setAttribute("aria-pressed",x===b));};
+      root.querySelector("#ic").onclick=e=>{const b=e.target.closest("[data-i]");if(!b)return;icon=b.dataset.i;root.querySelectorAll("#ic button").forEach(x=>x.setAttribute("aria-pressed",x===b));};
+      const del=root.querySelector("#del");let armed=false;
+      if(del)del.onclick=()=>{if(!armed){armed=true;del.classList.add("armed");del.textContent="Click again to delete";return;}
+        modules.splice(idx,1);save();close();render();toast("Module deleted");};
+      root.querySelector("#mf").onsubmit=e=>{e.preventDefault();
+        const title=root.querySelector("#m-title").value.trim();
+        if(!title){root.querySelector("#merr").textContent="Module name is required.";return;}
+        const rawUrl=root.querySelector("#m-url").value.trim();
+        if(rawUrl&&!safeUrl(rawUrl)){root.querySelector("#merr").textContent="Enter a web address starting with https:// or a page name like tracker.html.";return;}
+        const data={title,desc:root.querySelector("#m-desc").value.trim(),url:rawUrl,status:root.querySelector("#m-status").value,icon,color};
+        if(idx>=0)modules[idx]={...modules[idx],...data};else modules.push({id:"m"+Date.now().toString(36),...data});
+        save();close();render();toast(idx>=0?"Module updated":"Module added");};
+    });
+}
+
+function toast(msg){const r=$("#toastRoot");r.innerHTML=`<div class="toast" role="status">${esc(msg)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>r.innerHTML="",2600);}
+
+applyBrand();render();
+</script>
+</body>
+</html>
